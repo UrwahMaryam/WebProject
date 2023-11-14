@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Green Screen Page</title>
+
+    <style>
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 14pt;
+            margin: 40px;
+        }
+
+        h1 {
+            color: brown;
+        }
+
+        canvas {
+            border: 1px solid gray;
+            height: 200px;
+        }
+
+        input {
+            background-color: lightyellow;
+            color: brown;
+        }
+
+        p {
+            color: brown;
+        }
+    </style>
+
+    <script>
+        var fgImage = null;
+        var bgImage = null;
+        var greenScreenCanvas;
+        var greenScreenCanvas1;
+
+        function loadForegroundImage() {
+            var imgFile = document.getElementById("fgfile");
+            // var fileName = imgFile.value;
+            fgImage = new SimpleImage(imgFile);
+            greenScreenCanvas = document.getElementById("can");
+            fgImage.drawTo(greenScreenCanvas);
+
+            alert("Foreground Image Uploaded!");
+        }
+
+        function loadBackgroundImage() {
+            var imgFile = document.getElementById("bgfile");
+            // var fileName = imgFile.value;
+            bgImage = new SimpleImage(imgFile);
+            greenScreenCanvas1 = document.getElementById("can1");
+            bgImage.drawTo(greenScreenCanvas1);
+
+            alert("Background Image Uploaded!");
+        }
+
+        function doGreenScreen() {
+            // Check that images are laoded
+            if (fgImage == null || !fgImage.complete()) {
+                alert("Foreground image has not been loaded!");
+                return;
+            }
+
+            if (bgImage == null || !bgImage.complete()) {
+                alert("Background image has not been loaded!");
+                return;
+            }
+
+            clearCanvas();
+            var finalImage = createComposite();
+            finalImage.drawTo(greenScreenCanvas);
+        }
+
+        function createComposite() {
+            var greenThreshold = 240;
+            var output = new SimpleImage(fgImage.getWidth(), fgImage.getHeight());
+
+            for (var pixel of fgImage.values()) {
+                var x = pixel.getX();
+                var y = pixel.getY();
+
+                if (pixel.getGreen() > greenThreshold) {
+                    // Pixel is green so use backgroundImage
+                    var bgPixel = bgImage.getPixel(x, y);
+                    output.setPixel(x, y, bgPixel);
+                }
+
+                else {
+                    // Pixel is not green, use foregroundImage
+                    output.setPixel(x, y, pixel);
+                }
+            }
+
+            return output;
+        }
+
+        function clearCanvas() {
+            doClear(greenScreenCanvas);
+            doClear(greenScreenCanvas1);
+        }
+
+        function doClear(canvas) {
+            var context = canvas.getContext("2d");
+            context.clearRect(0, 0, canvas.width, canvas.height);
+        }
+    </script>
+</head>
+
+<body>
+    <script src="http://www.dukelearntoprogram.com/course1/common/js/image/SimpleImage.js"></script>
+    <h1>Green Screen Web Page</h1>
+
+    <canvas id="can"></canvas>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <canvas id="can1"></canvas>
+    <br><br>
+    <p>
+    Foreground Image: <input type="file" multiple="false" accept="Image/*" id="fgfile"
+    onchange="loadForegroundImage()">
+    </p>
+    
+    <p>
+    Background Image: <input type="file" multiple="false" accept="Image/*" id="bgfile"
+    onchange="loadBackgroundImage()">
+    </p>
+    <br><br>
+
+    <input type="button" value="Create Composite" onclick="doGreenScreen()">
+    <input type="button" value="Clear Canvases" onclick="clearCanvas()">
+</body>
+
+</html>
